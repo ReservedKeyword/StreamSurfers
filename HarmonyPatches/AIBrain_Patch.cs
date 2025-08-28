@@ -27,8 +27,8 @@ namespace StreamSurfers.HarmonyPatches
       SimpleInteraction targetInteraction = ownerBrain.yqh;
       EInteractionType targetInteractionType = targetInteraction.yec;
 
-      // Stop if the AI is a staff member; we only change the name of patrons.
-      if (dataStorage.yrj)
+      // Stop if the AI is either (a) a staff member or (b) has the character trait Queso.
+      if (dataStorage.yrj || dataStorage.fna(CharacterTraits.Queso))
       {
         return;
       }
