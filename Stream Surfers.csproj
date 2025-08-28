@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="GamePath.props" Condition="Exists('GamePath.props')"></Import>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>StreamSurfers</AssemblyName>
+    <RootNamespace>StreamSurfers</RootNamespace>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <TargetName>$(AssemblyName)-$(AssemblyVersion)</TargetName>
+    <LangVersion>default</LangVersion>
+    <IsPackable>false</IsPackable>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <LangVersion>latest</LangVersion>
+    <OutputPath>bin\$(Configuration)</OutputPath>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CopyLocalLockFileAssemblies>True</CopyLocalLockFileAssemblies>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(ManagedDataDir)\Assembly-CSharp.dll" Private="false" />
+    <Reference Include="$(ManagedDataDir)\Unity.Netcode.Runtime.dll" Private="false" />
+    <Reference Include="$(ManagedDataDir)\Unity.TextMeshPro.dll" Private="false" />
+    <Reference Include="$(ManagedDataDir)\UnityEngine.dll" Private="false" />
+    <Reference Include="$(ManagedDataDir)\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(ManagedDataDir)\UnityEngine.UI.dll" Private="false" />
+    <Reference Include="$(MelonLoaderDir)\0Harmony.dll" Private="false" />
+    <Reference Include="$(MelonLoaderDir)\MelonLoader.dll" Private="false" />
+    <PackageReference Include="TwitchLib" Version="3.5.3" Private="false" />
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(BaseGameDir)\Mods&quot;" />
+    <Exec Command="COPY &quot;$(TargetDir)\Microsoft.Extensions.Logging.Abstractions.dll&quot; &quot;$(BaseGameDir)\Mods&quot;" />
+    <Exec Command="COPY &quot;$(TargetDir)\TwitchLib.Client*.dll&quot; &quot;$(BaseGameDir)\Mods&quot;" />
+    <Exec Command="COPY &quot;$(TargetDir)\TwitchLib.Client.Enums.dll&quot; &quot;$(BaseGameDir)\Mods&quot;" />
+    <Exec Command="COPY &quot;$(TargetDir)\TwitchLib.Client.Models.dll&quot; &quot;$(BaseGameDir)\Mods&quot;" />
+    <Exec Command="COPY &quot;$(TargetDir)\TwitchLib.Communication.dll&quot; &quot;$(BaseGameDir)\Mods&quot;" />
+  </Target>
+</Project>
