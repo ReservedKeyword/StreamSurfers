@@ -45,25 +45,25 @@ namespace StreamSurfers.TwitchIntegration
       client.OnMessageReceived += Client_OnMessageReceived;
       client.Connect();
 
-      log.Msg("Attempting to connect to Twitch IRC client...");
+      LogMsg("Attempting to connect to Twitch IRC client...");
     }
 
     private void Client_OnConnected(object sender, OnConnectedArgs e)
     {
-      log.Msg("Connected to Twitch IRC client.");
+      LogMsg("Connected to Twitch IRC client.");
       client.JoinChannel(channelName);
-      log.Msg($"Attempting to join channel {channelName} as anonymous user...");
+      LogMsg($"Attempting to join channel {channelName} as anonymous user...");
     }
 
     private void Client_OnConnectionError(object sender, OnConnectionErrorArgs e)
     {
-      log.Error("Failed to connect to Twitch IRC client!");
-      log.Error(e.Error.Message);
+      LogError("Failed to connect to Twitch IRC client!");
+      LogError(e.Error.Message);
     }
 
     private void Client_OnJoinedChannel(object sender, OnJoinedChannelArgs e)
     {
-      log.Msg($"Joined {channelName}'s Twitch channel as anonymous user.");
+      LogMsg($"Joined {channelName}'s Twitch channel as anonymous user.");
     }
 
     private void Client_OnMessageReceived(object sender, OnMessageReceivedArgs e)
@@ -73,7 +73,7 @@ namespace StreamSurfers.TwitchIntegration
 
       if (blocklistedChatters.Contains(displayName, StringComparer.CurrentCultureIgnoreCase))
       {
-        log.Msg($"Detected blocklisted chatter {displayName}, will not add to queue.");
+        LogMsg($"Detected blocklisted chatter {displayName}, will not add to queue.");
         return;
       }
 
@@ -88,12 +88,12 @@ namespace StreamSurfers.TwitchIntegration
         if (isSubscriber)
         {
           subscriberParticipants.Add(displayName);
-          log.Msg($"Twitch chatter {displayName} (subscriber) added as participant.");
+          LogMsg($"Twitch chatter {displayName} (subscriber) added as participant.");
         }
         else
         {
           nonSubscriberParticipants.Add(displayName);
-          log.Msg($"Twitch chatter {displayName} (non-subscriber) added as participant.");
+          LogMsg($"Twitch chatter {displayName} (non-subscriber) added as participant.");
         }
       }
     }
@@ -137,7 +137,7 @@ namespace StreamSurfers.TwitchIntegration
       {
         if (GetTotalParticipants() == 0)
         {
-          log.Warning("No chatters found, nothing to return.");
+          LogWarning("No chatters found, nothing to return.");
           return null;
         }
 
@@ -145,7 +145,7 @@ namespace StreamSurfers.TwitchIntegration
 
         if (totalWeight <= 0)
         {
-          log.Error("Total weight is zero or negative. Cannot perform weighted pick.");
+          LogError("Total weight is zero or negative. Cannot perform weighted pick.");
           return null;
         }
 
@@ -161,7 +161,7 @@ namespace StreamSurfers.TwitchIntegration
             int subIndex = random.Next(subscriberParticipants.Count);
             winner = subscriberParticipants.ElementAt(subIndex);
             subscriberParticipants.Remove(winner);
-            log.Msg($"Selected winner (subscriber): {winner}");
+            LogMsg($"Selected winner (subscriber): {winner}");
             winnerSelected = true;
             break;
 
@@ -169,31 +169,46 @@ namespace StreamSurfers.TwitchIntegration
             int nonSubIndex = random.Next(nonSubscriberParticipants.Count);
             winner = nonSubscriberParticipants.ElementAt(nonSubIndex);
             nonSubscriberParticipants.Remove(winner);
-            log.Msg($"Selected winner (non-subscriber): {winner}");
+            LogMsg($"Selected winner (non-subscriber): {winner}");
             winnerSelected = true;
             break;
 
           case TargetGroup.None:
           default:
-            log.Warning("No target group determined for selection.");
+            LogWarning("No target group determined for selection.");
             winnerSelected = false;
             break;
         }
 
         if (!winnerSelected && (GetTotalParticipants() > 0))
         {
-          log.Error(
+          LogError(
             $"Failed to select winner event thought participants exist (Target Group: {target})."
           );
           return null;
         }
 
-        log.Msg($"Returning winner: {winner}. Remaining participants: {GetTotalParticipants()}.");
+        LogMsg($"Returning winner: {winner}. Remaining participants: {GetTotalParticipants()}.");
         return winner;
       }
     }
 
     private int GetTotalParticipants() =>
       subscriberParticipants.Count + nonSubscriberParticipants.Count;
+
+    private void LogError(string err)
+    {
+      log.Error($"[{nameof(ChatterManager)}] {err}");
+    }
+
+    private void LogMsg(string msg)
+    {
+      log.Msg($"[{nameof(ChatterManager)}] {msg}");
+    }
+
+    private void LogWarning(string msg)
+    {
+      log.Warning($"[{nameof(ChatterManager)}] {msg}");
+    }
   }
 }

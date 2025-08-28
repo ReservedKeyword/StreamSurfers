@@ -7,20 +7,24 @@ namespace StreamSurfers.HarmonyPatches
   [HarmonyPatch(typeof(AIBrain))]
   public static class AIBrain_Patch
   {
+    private static readonly Mod mod = Mod.Instance;
     private static readonly int MAX_CHATTER_FETCH_ATTEMPTS = 5;
-
     private static readonly Dictionary<ulong, string> chattersInPark = [];
+
+    private static void LogMsg(string msg)
+    {
+      mod.LoggerInstance.Msg($"[{nameof(AIBrain_Patch)}] {msg}");
+    }
 
     [HarmonyPatch(nameof(AIBrain.fha))]
     [HarmonyPrefix]
     public static void OnStateTransition_Prefix(AIBrain __instance, string a)
     {
-      Mod mod = Mod.Instance;
       string nextStateName = a;
 
       if (nextStateName == "LeavingPark")
       {
-        OnLeavingPark(mod, __instance);
+        OnLeavingPark(__instance);
         return;
       }
 
@@ -52,11 +56,13 @@ namespace StreamSurfers.HarmonyPatches
         return;
       }
 
-      bool isLegitimate = targetInteractionType == EInteractionType.TicketStation;
-      bool isSneakingIn = dataStorage.fna(CharacterTraits.TicketCheater);
+      bool isLegitimateEntry = targetInteractionType == EInteractionType.TicketStation;
+      bool isSneakingIn =
+        dataStorage.fna(CharacterTraits.TicketCheater)
+        && targetInteractionType == EInteractionType.ChangingRoom;
 
       // Return if we're not heading to a ticket station and we're not sneaking in
-      if (!isLegitimate && !isSneakingIn)
+      if (!isLegitimateEntry && !isSneakingIn)
       {
         return;
       }
@@ -86,9 +92,7 @@ namespace StreamSurfers.HarmonyPatches
       // Return if we weren't able to pick a chatter from the Set.
       if (chatterName == null)
       {
-        mod.LoggerInstance.Msg(
-          $"No chatter found for {aiBrain.Nameplate.text}, their name remains the same."
-        );
+        LogMsg($"No chatter found for {aiBrain.Nameplate.text}, their name remains the same.");
         return;
       }
 
@@ -98,18 +102,18 @@ namespace StreamSurfers.HarmonyPatches
       }
 
       chattersInPark.Add(networkObjectId, chatterName);
-      mod.LoggerInstance.Msg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
+      LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
     }
 
-    private static void OnLeavingPark(Mod mod, AIBrain aiBrain)
+    private static void OnLeavingPark(AIBrain aiBrain)
     {
       ulong networkObjectId = aiBrain.NetworkObjectId;
-      string ownerName = aiBrain.Nameplate.text;
 
       if (chattersInPark.ContainsKey(networkObjectId))
       {
+        string ownerName = chattersInPark[networkObjectId];
         chattersInPark.Remove(networkObjectId);
-        mod.LoggerInstance.Msg($"Cleaning up {ownerName}, they're leaving the park!");
+        LogMsg($"Cleaning up {ownerName}, they're leaving the park!");
       }
     }
   }
