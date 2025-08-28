@@ -27,6 +27,14 @@ namespace StreamSurfers.HarmonyPatches
       SimpleInteraction targetInteraction = ownerBrain.yqh;
       EInteractionType targetInteractionType = targetInteraction.yec;
 
+      // Stop if the AI is a staff member; we only change the name of patrons.
+      if (dataStorage.yrj)
+      {
+        return;
+      }
+
+      // Stop if the AI is already in the park, the park is not open, or they're
+      // not moving toward any specific target.
       if (
         chattersInPark.ContainsKey(networkObjectId)
         || gameState != EGameStage.ParkOpened
@@ -41,7 +49,7 @@ namespace StreamSurfers.HarmonyPatches
         dataStorage.fna(CharacterTraits.TicketCheater)
         && targetInteractionType == EInteractionType.ChangingRoom;
 
-      // Return if we're not heading to a ticket station and we're not sneaking in
+      // Stop if we're not heading toward a ticket station, or we're not sneaking in.
       if (!isLegitimateEntry && !isSneakingIn)
       {
         return;
@@ -50,7 +58,8 @@ namespace StreamSurfers.HarmonyPatches
       string chatterName = null;
       int attemptNum = 0;
 
-      // Attempt to fetch a unique chatter that's not already in the park, until max
+      // Loop until the maximum reached, attempting to fetch a new, unique chatter name of
+      // someone who is not already in the park, or fail if no chatters could be found.
       while (attemptNum < MAX_CHATTER_FETCH_ATTEMPTS)
       {
         string potentialName = chatterManager.GetRandomChatter();
@@ -69,7 +78,7 @@ namespace StreamSurfers.HarmonyPatches
         attemptNum++;
       }
 
-      // Return if we weren't able to pick a chatter from the Set.
+      // Stop if we weren't able to pick a new, random, unique chatter.
       if (chatterName == null)
       {
         LogMsg($"No chatter found for {ownerBrain.Nameplate.text}, their name remains the same.");
