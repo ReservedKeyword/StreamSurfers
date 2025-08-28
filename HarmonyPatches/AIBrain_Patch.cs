@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CayplayAI;
 using HarmonyLib;
+using StreamSurfers.TwitchIntegration;
 
 namespace StreamSurfers.HarmonyPatches
 {
@@ -8,6 +9,8 @@ namespace StreamSurfers.HarmonyPatches
   public static class AIBrain_Patch
   {
     private static readonly Mod mod = Mod.Instance;
+    private static readonly ChatterManager chatterManager = mod.ChatterManager;
+
     private static readonly int MAX_CHATTER_FETCH_ATTEMPTS = 5;
     private static readonly Dictionary<ulong, string> chattersInPark = [];
 
@@ -16,35 +19,12 @@ namespace StreamSurfers.HarmonyPatches
       mod.LoggerInstance.Msg($"[{nameof(AIBrain_Patch)}] {msg}");
     }
 
-    [HarmonyPatch(nameof(AIBrain.fha))]
-    [HarmonyPrefix]
-    public static void OnStateTransition_Prefix(AIBrain __instance, string a)
+    private static void OnEnteringPark(AIBrain ownerBrain)
     {
-      string nextStateName = a;
-
-      if (nextStateName == "LeavingPark")
-      {
-        OnLeavingPark(__instance);
-        return;
-      }
-
-      AIState currentState = __instance.syf;
-      bool isStartingToTravel = currentState.Name == "Idle";
-      bool isGoingToAttraction = nextStateName == "GoToTargetAttraction";
-
-      if (isStartingToTravel && isGoingToAttraction)
-      {
-        OnEnteringPark(mod, __instance);
-        return;
-      }
-    }
-
-    private static void OnEnteringPark(Mod mod, AIBrain aiBrain)
-    {
-      AIDataStorage dataStorage = aiBrain.Data;
+      AIDataStorage dataStorage = ownerBrain.Data;
       EGameStage gameState = GameManager.rzy.ygl;
-      ulong networkObjectId = aiBrain.NetworkObjectId;
-      SimpleInteraction targetInteraction = aiBrain.yqh;
+      ulong networkObjectId = ownerBrain.NetworkObjectId;
+      SimpleInteraction targetInteraction = ownerBrain.yqh;
       EInteractionType targetInteractionType = targetInteraction.yec;
 
       if (
@@ -73,7 +53,7 @@ namespace StreamSurfers.HarmonyPatches
       // Attempt to fetch a unique chatter that's not already in the park, until max
       while (attemptNum < MAX_CHATTER_FETCH_ATTEMPTS)
       {
-        string potentialName = mod.ChatterManager.GetRandomChatter();
+        string potentialName = chatterManager.GetRandomChatter();
 
         if (potentialName == null)
         {
@@ -92,28 +72,50 @@ namespace StreamSurfers.HarmonyPatches
       // Return if we weren't able to pick a chatter from the Set.
       if (chatterName == null)
       {
-        LogMsg($"No chatter found for {aiBrain.Nameplate.text}, their name remains the same.");
+        LogMsg($"No chatter found for {ownerBrain.Nameplate.text}, their name remains the same.");
         return;
       }
 
-      if (aiBrain.Nameplate != null)
+      if (ownerBrain.Nameplate != null)
       {
-        aiBrain.Nameplate.text = chatterName;
+        ownerBrain.Nameplate.text = chatterName;
+        chattersInPark.Add(networkObjectId, chatterName);
+        LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
       }
-
-      chattersInPark.Add(networkObjectId, chatterName);
-      LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
     }
 
-    private static void OnLeavingPark(AIBrain aiBrain)
+    private static void OnLeavingPark(AIBrain ownerBrain)
     {
-      ulong networkObjectId = aiBrain.NetworkObjectId;
+      ulong networkObjectId = ownerBrain.NetworkObjectId;
 
       if (chattersInPark.ContainsKey(networkObjectId))
       {
         string ownerName = chattersInPark[networkObjectId];
         chattersInPark.Remove(networkObjectId);
         LogMsg($"Cleaning up {ownerName}, they're leaving the park!");
+      }
+    }
+
+    [HarmonyPatch(nameof(AIBrain.fha))]
+    [HarmonyPrefix]
+    public static void OnStateTransition_Prefix(AIBrain __instance, string a)
+    {
+      string nextStateName = a;
+
+      if (nextStateName == "LeavingPark")
+      {
+        OnLeavingPark(__instance);
+        return;
+      }
+
+      AIState currentState = __instance.syf;
+      bool isStartingToTravel = currentState.Name == "Idle";
+      bool isGoingToAttraction = nextStateName == "GoToTargetAttraction";
+
+      if (isStartingToTravel && isGoingToAttraction)
+      {
+        OnEnteringPark(__instance);
+        return;
       }
     }
   }
