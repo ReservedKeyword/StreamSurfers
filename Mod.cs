@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using MelonLoader;
 using StreamSurfers.TwitchIntegration;
@@ -19,6 +20,17 @@ namespace StreamSurfers
 
     private HarmonyLib.Harmony harmony;
 
+    private void ClearChattersInPark()
+    {
+      LogMsg($"New in-game day! All chatters cleared from in-game park cache!");
+      ChattersInPark.Clear();
+    }
+
+    private void LogMsg(string msg)
+    {
+      LoggerInstance.Msg($"[{nameof(Mod)}] {msg}");
+    }
+
     public override void OnInitializeMelon()
     {
       Instance = this;
@@ -38,6 +50,27 @@ namespace StreamSurfers
       // Setup Harmony patches
       harmony = new(Constants.ToHarmonyID());
       harmony.PatchAll();
+    }
+
+    public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+    {
+      if (sceneName == Constants.GAMEPLAY_SCENE_NAME)
+      {
+        LogMsg("GameplayScene loaded! Starting coroutine, subscribing to OnNewDayStarted event.");
+        MelonCoroutines.Start(WaitForGameManagerAndSubscribe());
+      }
+    }
+
+    private IEnumerator WaitForGameManagerAndSubscribe()
+    {
+      // Wait for the GameManager instance to be ready
+      while (GameManager.rzy == null)
+      {
+        yield return null;
+      }
+
+      GameManager.rzy.OnNewDayStarted.AddListener(ClearChattersInPark);
+      LogMsg("Successfully subscribed to OnNewDayStarted event!");
     }
   }
 }
