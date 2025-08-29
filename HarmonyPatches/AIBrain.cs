@@ -5,8 +5,8 @@ using StreamSurfers.TwitchIntegration;
 
 namespace StreamSurfers.HarmonyPatches
 {
-  [HarmonyPatch(typeof(CayplayAI.AIBrain))]
-  public static class AIBrain
+  [HarmonyPatch(typeof(AIBrain))]
+  public static class AIBrainPatches
   {
     private static readonly int MAX_CHATTER_FETCH_ATTEMPTS = 5;
 
@@ -19,7 +19,7 @@ namespace StreamSurfers.HarmonyPatches
       mod.LoggerInstance.Msg($"[{nameof(AIBrain)}] {msg}");
     }
 
-    private static void OnEnteringPark(CayplayAI.AIBrain ownerBrain)
+    private static void OnEnteringPark(AIBrain ownerBrain)
     {
       AIDataStorage dataStorage = ownerBrain.Data;
       EGameStage gameState = GameManager.rzy.ygl;
@@ -97,7 +97,7 @@ namespace StreamSurfers.HarmonyPatches
       LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
     }
 
-    private static void OnLeavingPark(CayplayAI.AIBrain ownerBrain)
+    private static void OnLeavingPark(AIBrain ownerBrain)
     {
       ulong networkObjectId = ownerBrain.NetworkObjectId;
 
@@ -109,9 +109,9 @@ namespace StreamSurfers.HarmonyPatches
       }
     }
 
-    [HarmonyPatch(nameof(CayplayAI.AIBrain.fha))]
+    [HarmonyPatch(nameof(AIBrain.fha))]
     [HarmonyPrefix]
-    public static void OnStateTransition_Prefix(CayplayAI.AIBrain __instance, string a)
+    public static void OnStateTransition_Prefix(AIBrain __instance, string a)
     {
       string nextStateName = a;
 

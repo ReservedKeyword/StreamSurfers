@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CayplayAI;
 using HarmonyLib;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace StreamSurfers.HarmonyPatches
 
     [HarmonyPatch(nameof(HaulingInteraction.chg))]
     [HarmonyPrefix]
-    public static void OnHaulingStarted_Prefix(HaulingInteraction __instance, CayplayAI.AIBrain a)
+    public static void OnHaulingStarted_Prefix(HaulingInteraction __instance, AIBrain a)
     {
       Transform itemToHaul = Traverse.Create(__instance).Field("ItemToHaul").GetValue<Transform>();
 
@@ -27,7 +28,7 @@ namespace StreamSurfers.HarmonyPatches
         return;
       }
 
-      CayplayAI.AIBrain patientBrain = itemToHaul.GetComponentInParent<CayplayAI.AIBrain>();
+      AIBrain patientBrain = itemToHaul.GetComponentInParent<AIBrain>();
 
       if (patientBrain != null)
       {
