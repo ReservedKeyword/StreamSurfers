@@ -87,6 +87,7 @@ namespace StreamSurfers.HarmonyPatches
 
       if (ownerBrain.Nameplate != null)
       {
+        dataStorage.yqy = chatterName;
         ownerBrain.Nameplate.text = chatterName;
         chattersInPark.Add(networkObjectId, chatterName);
         LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
