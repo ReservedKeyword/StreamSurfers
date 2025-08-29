@@ -5,21 +5,21 @@ using StreamSurfers.TwitchIntegration;
 
 namespace StreamSurfers.HarmonyPatches
 {
-  [HarmonyPatch(typeof(AIBrain))]
-  public static class AIBrain_Patch
+  [HarmonyPatch(typeof(CayplayAI.AIBrain))]
+  public static class AIBrain
   {
+    private static readonly int MAX_CHATTER_FETCH_ATTEMPTS = 5;
+
     private static readonly Mod mod = Mod.Instance;
     private static readonly ChatterManager chatterManager = mod.ChatterManager;
-
-    private static readonly int MAX_CHATTER_FETCH_ATTEMPTS = 5;
-    private static readonly Dictionary<ulong, string> chattersInPark = [];
+    private static readonly Dictionary<ulong, string> chattersInPark = mod.ChattersInPark;
 
     private static void LogMsg(string msg)
     {
-      mod.LoggerInstance.Msg($"[{nameof(AIBrain_Patch)}] {msg}");
+      mod.LoggerInstance.Msg($"[{nameof(AIBrain)}] {msg}");
     }
 
-    private static void OnEnteringPark(AIBrain ownerBrain)
+    private static void OnEnteringPark(CayplayAI.AIBrain ownerBrain)
     {
       AIDataStorage dataStorage = ownerBrain.Data;
       EGameStage gameState = GameManager.rzy.ygl;
@@ -85,16 +85,19 @@ namespace StreamSurfers.HarmonyPatches
         return;
       }
 
-      if (ownerBrain.Nameplate != null)
+      if (dataStorage.yqy == null || ownerBrain.Nameplate == null)
       {
-        dataStorage.yqy = chatterName;
-        ownerBrain.Nameplate.text = chatterName;
-        chattersInPark.Add(networkObjectId, chatterName);
-        LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
+        LogMsg($"Name or Display Name is null, will not proceed.");
+        return;
       }
+
+      dataStorage.yqy = chatterName;
+      ownerBrain.Nameplate.text = chatterName;
+      chattersInPark.Add(networkObjectId, chatterName);
+      LogMsg($"Adding chatter {chatterName} ({networkObjectId}) to the park!");
     }
 
-    private static void OnLeavingPark(AIBrain ownerBrain)
+    private static void OnLeavingPark(CayplayAI.AIBrain ownerBrain)
     {
       ulong networkObjectId = ownerBrain.NetworkObjectId;
 
@@ -106,9 +109,9 @@ namespace StreamSurfers.HarmonyPatches
       }
     }
 
-    [HarmonyPatch(nameof(AIBrain.fha))]
+    [HarmonyPatch(nameof(CayplayAI.AIBrain.fha))]
     [HarmonyPrefix]
-    public static void OnStateTransition_Prefix(AIBrain __instance, string a)
+    public static void OnStateTransition_Prefix(CayplayAI.AIBrain __instance, string a)
     {
       string nextStateName = a;
 

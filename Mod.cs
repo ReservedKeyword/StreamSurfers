@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MelonLoader;
 using StreamSurfers.TwitchIntegration;
 
@@ -14,12 +15,14 @@ namespace StreamSurfers
 
     public ModConfig ModConfig { get; private set; }
     public ChatterManager ChatterManager { get; private set; }
+    public Dictionary<ulong, string> ChattersInPark { get; private set; }
 
     private HarmonyLib.Harmony harmony;
 
     public override void OnInitializeMelon()
     {
       Instance = this;
+      ChattersInPark = [];
       ModConfig = new();
 
       if (!ModConfig.IsEnabled)
