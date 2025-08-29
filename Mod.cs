@@ -2,7 +2,7 @@ using MelonLoader;
 using StreamSurfers.TwitchIntegration;
 
 [assembly: HarmonyDontPatchAll]
-[assembly: MelonInfo(typeof(StreamSurfers.Mod), "StreamSurfers", "1.0.0", "ReservedKeyword")]
+[assembly: MelonInfo(typeof(StreamSurfers.Mod), "StreamSurfers", "1.0.1", "ReservedKeyword")]
 [assembly: MelonGame("CayPlay", "WaterparkSimulator")]
 [assembly: MelonColor(1, 0, 158, 196)]
 

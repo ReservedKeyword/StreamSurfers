@@ -2,6 +2,6 @@ namespace StreamSurfers
 {
   public class Constants
   {
-    public static string ToHarmonyID() => $"StreamSurfers-MelonLoader.1.0.0";
+    public static string ToHarmonyID() => $"StreamSurfers-MelonLoader.1.0.1";
   }
 }
